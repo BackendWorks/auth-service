@@ -1,41 +1,41 @@
 name: Test
 
 on:
-    push:
-        branches: [main, develop]
-    pull_request:
-        branches: [main, develop]
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
 
 jobs:
-    unit-tests:
-        name: Unit Tests
-        runs-on: ubuntu-latest
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
 
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v4
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-            - name: Setup Node
-              uses: actions/setup-node@v4
-              with:
-                  node-version: 20
-                  cache: npm
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: yarn
 
-            - name: Install dependencies
-              run: npm ci
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
 
-            - name: Generate proto types
-              run: npm run proto:generate
+      - name: Generate proto types
+        run: npm run proto:generate
 
-            - name: Run unit tests with coverage
-              run: npm run test:cov
-              env:
-                  NODE_ENV: test
+      - name: Run unit tests with coverage
+        run: npm run test:cov
+        env:
+          NODE_ENV: test
 
-            - name: Upload coverage report
-              uses: actions/upload-artifact@v4
-              if: always()
-              with:
-                  name: auth-service-coverage
-                  path: coverage/
-                  retention-days: 7
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: auth-service-coverage
+          path: coverage/
+          retention-days: 7

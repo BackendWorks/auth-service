@@ -102,7 +102,6 @@ temp/
 swagger-spec.json
 
 # Package managers
-yarn.lock
 package-lock.json
 
 # Local development

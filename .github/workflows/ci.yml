@@ -1,32 +1,37 @@
-name: CI (auth)
+name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
   pull_request:
-    branches: [main]
+    branches: [main, develop]
 
 jobs:
-  test:
+  lint-and-build:
+    name: Lint, Format & Build
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [18.x, 20.x]
+
     steps:
-      - uses: actions/checkout@v4
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 20
+          cache: yarn
+
       - name: Install dependencies
-        run: npm install --legacy-peer-deps
-        working-directory: .
-      - name: Run lint
-        run: |
-          if [ -f eslint.config.mjs ]; then
-            npx eslint .
-          fi
-        working-directory: .
-      - name: Run tests
-        run: npm test
-        working-directory: . 
+        run: yarn install --frozen-lockfile
+
+      - name: Generate proto types
+        run: npm run proto:generate
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Format check
+        run: npx prettier --check "src/**/*.ts" "test/**/*.ts"
+
+      - name: Build
+        run: npm run build
