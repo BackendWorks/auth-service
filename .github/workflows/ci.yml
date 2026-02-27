@@ -29,6 +29,9 @@ jobs:
       - name: Generate proto types
         run: npm run proto:generate
 
+      - name: Format generated files
+        run: npx prettier --write "src/generated/**/*.ts"
+
       - name: Lint
         run: npm run lint
 
