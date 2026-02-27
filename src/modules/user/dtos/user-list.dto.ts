@@ -4,14 +4,16 @@ import { IsOptional, IsEnum, IsBoolean } from 'class-validator';
 import { Role } from '@backendworks/auth-db';
 import { ApiBaseQueryDto } from 'src/common/dtos/api-query.dto';
 
+const RoleValues = ['USER', 'ADMIN'] as const;
+
 export class UserListDto extends ApiBaseQueryDto {
     @ApiProperty({
         description: 'Filter users by role',
-        enum: Role,
+        enum: RoleValues,
         required: false,
     })
     @IsOptional()
-    @IsEnum(Role)
+    @IsEnum(RoleValues)
     role?: Role;
 
     @ApiProperty({
