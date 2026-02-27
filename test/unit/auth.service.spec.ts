@@ -12,6 +12,7 @@ import {
     ITokenResponse,
     TokenType,
 } from 'src/modules/auth/interfaces/auth.interface';
+import { RABBITMQ_CLIENT } from 'src/modules/auth/constants/auth.constants';
 import { AuthService } from 'src/modules/auth/services/auth.service';
 import { UserResponseDto } from 'src/modules/user/dtos/user.response.dto';
 import { UserAuthService } from 'src/modules/user/services/user.auth.service';
@@ -54,6 +55,10 @@ describe('AuthService', () => {
         createHash: jest.fn(),
     };
 
+    const mockRmqClient = {
+        emit: jest.fn(),
+    };
+
     beforeEach(async () => {
         const module: TestingModule = await Test.createTestingModule({
             providers: [
@@ -62,6 +67,7 @@ describe('AuthService', () => {
                 { provide: JwtService, useValue: mockJwtService },
                 { provide: UserAuthService, useValue: mockUserAuthService },
                 { provide: HashService, useValue: mockHashService },
+                { provide: RABBITMQ_CLIENT, useValue: mockRmqClient },
             ],
         }).compile();
 
@@ -308,6 +314,12 @@ describe('AuthService', () => {
                 lastName: mockSignupDto.lastName,
                 password: hashedPassword,
             });
+            expect(mockRmqClient.emit).toHaveBeenCalledWith('user.registered', {
+                userId: createdUser.id,
+                email: createdUser.email,
+                firstName: createdUser.firstName,
+                createdAt: createdUser.createdAt.toISOString(),
+            });
             expect(authService.generateTokens).toHaveBeenCalledWith({
                 id: createdUser.id,
                 role: createdUser.role,
@@ -403,6 +415,7 @@ describe('AuthService', () => {
                     { provide: JwtService, useValue: mockJwtService },
                     { provide: UserAuthService, useValue: mockUserAuthService },
                     { provide: HashService, useValue: mockHashService },
+                    { provide: RABBITMQ_CLIENT, useValue: mockRmqClient },
                 ],
             }).compile();
 
@@ -422,6 +435,7 @@ describe('AuthService', () => {
                     { provide: JwtService, useValue: mockJwtService },
                     { provide: UserAuthService, useValue: mockUserAuthService },
                     { provide: HashService, useValue: mockHashService },
+                    { provide: RABBITMQ_CLIENT, useValue: mockRmqClient },
                 ],
             }).compile();
 

@@ -1,14 +1,17 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { ClientProxy } from '@nestjs/microservices';
 
 import { HashService } from 'src/common/services/hash.service';
 
 import { AuthLoginDto } from '../dtos/auth.login.dto';
 import { AuthResponseDto } from '../dtos/auth.response.dto';
 import { AuthSignupDto } from '../dtos/auth.signup.dto';
+import { UserRegisteredEvent } from '../events/user-registered.event';
 import { IAuthPayload, ITokenResponse, TokenType } from '../interfaces/auth.interface';
 import { UserAuthService } from 'src/modules/user/services/user.auth.service';
+import { RABBITMQ_CLIENT } from '../constants/auth.constants';
 
 @Injectable()
 export class AuthService {
@@ -22,6 +25,7 @@ export class AuthService {
         private readonly jwtService: JwtService,
         private readonly hashService: HashService,
         private readonly userAuthService: UserAuthService,
+        @Inject(RABBITMQ_CLIENT) private readonly rmqClient: ClientProxy,
     ) {
         this.accessTokenSecret = this.configService.get<string>('auth.accessToken.secret') ?? '';
         this.refreshTokenSecret = this.configService.get<string>('auth.refreshToken.secret') ?? '';
@@ -89,6 +93,14 @@ export class AuthService {
         if (!createdUser?.id || !createdUser?.role) {
             throw new Error('Failed to create user');
         }
+
+        const event: UserRegisteredEvent = {
+            userId: createdUser.id,
+            email: createdUser.email,
+            firstName: createdUser.firstName,
+            createdAt: createdUser.createdAt.toISOString(),
+        };
+        this.rmqClient.emit('user.registered', event);
 
         const tokens = await this.generateTokens({
             id: createdUser.id,
