@@ -46,6 +46,16 @@ describe('DatabaseService', () => {
             await databaseService.onModuleInit();
             expect(logSpy).toHaveBeenCalledWith('Database connection established');
         });
+
+        it('should log error and rethrow when logger.log throws', async () => {
+            const mockError = new Error('Logger failed');
+            jest.spyOn(databaseService['logger'], 'log').mockImplementation(() => {
+                throw mockError;
+            });
+            const errorSpy = jest.spyOn(databaseService['logger'], 'error').mockImplementation();
+            await expect(databaseService.onModuleInit()).rejects.toThrow('Logger failed');
+            expect(errorSpy).toHaveBeenCalledWith('Failed to connect to database', mockError);
+        });
     });
 
     describe('onModuleDestroy', () => {

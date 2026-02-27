@@ -8,10 +8,14 @@ import { QueryBuilderOptions } from 'src/common/interfaces/query-builder.interfa
 describe('QueryBuilderService', () => {
     let queryBuilderService: QueryBuilderService;
 
+    const mockUserRepository = {
+        findMany: jest.fn(),
+        count: jest.fn(),
+    };
+
     const mockDatabaseService = {
-        user: {
-            findMany: jest.fn(),
-            count: jest.fn(),
+        get userRepository() {
+            return mockUserRepository;
         },
     };
 
@@ -62,6 +66,18 @@ describe('QueryBuilderService', () => {
             sortOrder: 'desc',
         };
 
+        const makePaginatedResult = (items: any[], total: number, page = 1, limit = 10) => ({
+            items,
+            meta: {
+                page,
+                limit,
+                total,
+                totalPages: Math.ceil(total / limit),
+                hasNextPage: page * limit < total,
+                hasPreviousPage: page > 1,
+            },
+        });
+
         it('should return paginated results with default options', async () => {
             const options: QueryBuilderOptions = {
                 model: 'user',
@@ -69,8 +85,7 @@ describe('QueryBuilderService', () => {
                 searchFields: ['firstName', 'lastName', 'email'],
             };
 
-            mockDatabaseService.user.findMany.mockResolvedValue(mockUsers);
-            mockDatabaseService.user.count.mockResolvedValue(2);
+            mockUserRepository.findMany.mockResolvedValue(makePaginatedResult(mockUsers, 2));
 
             const result = await queryBuilderService.findManyWithPagination(options);
 
@@ -85,28 +100,15 @@ describe('QueryBuilderService', () => {
                     hasPreviousPage: false,
                 },
             });
-            expect(mockDatabaseService.user.findMany).toHaveBeenCalledWith({
-                where: {
-                    deletedAt: null,
-                    OR: [
-                        { firstName: { contains: 'test', mode: 'insensitive' } },
-                        { lastName: { contains: 'test', mode: 'insensitive' } },
-                        { email: { contains: 'test', mode: 'insensitive' } },
-                    ],
-                },
-                skip: 0,
-                take: 10,
-                orderBy: { createdAt: 'desc' },
-            });
-            expect(mockDatabaseService.user.count).toHaveBeenCalledWith({
-                where: {
-                    deletedAt: null,
-                    OR: [
-                        { firstName: { contains: 'test', mode: 'insensitive' } },
-                        { lastName: { contains: 'test', mode: 'insensitive' } },
-                        { email: { contains: 'test', mode: 'insensitive' } },
-                    ],
-                },
+            expect(mockUserRepository.findMany).toHaveBeenCalledWith({
+                page: 1,
+                limit: 10,
+                search: 'test',
+                searchFields: ['firstName', 'lastName', 'email'],
+                sortBy: 'createdAt',
+                sortOrder: 'desc',
+                relations: [],
+                customFilters: {},
             });
         });
 
@@ -117,24 +119,13 @@ describe('QueryBuilderService', () => {
                 searchFields: ['firstName', 'lastName', 'email'],
             };
 
-            mockDatabaseService.user.findMany.mockResolvedValue(mockUsers);
-            mockDatabaseService.user.count.mockResolvedValue(2);
+            mockUserRepository.findMany.mockResolvedValue(makePaginatedResult(mockUsers, 2));
 
             await queryBuilderService.findManyWithPagination(options);
 
-            expect(mockDatabaseService.user.findMany).toHaveBeenCalledWith({
-                where: {
-                    deletedAt: null,
-                    OR: [
-                        { firstName: { contains: 'test', mode: 'insensitive' } },
-                        { lastName: { contains: 'test', mode: 'insensitive' } },
-                        { email: { contains: 'test', mode: 'insensitive' } },
-                    ],
-                },
-                skip: 0,
-                take: 10,
-                orderBy: { email: 'asc' },
-            });
+            expect(mockUserRepository.findMany).toHaveBeenCalledWith(
+                expect.objectContaining({ sortBy: 'email', sortOrder: 'asc' }),
+            );
         });
 
         it('should handle pagination correctly', async () => {
@@ -144,8 +135,7 @@ describe('QueryBuilderService', () => {
                 searchFields: ['firstName', 'lastName', 'email'],
             };
 
-            mockDatabaseService.user.findMany.mockResolvedValue(mockUsers);
-            mockDatabaseService.user.count.mockResolvedValue(15);
+            mockUserRepository.findMany.mockResolvedValue(makePaginatedResult(mockUsers, 15, 2, 5));
 
             const result = await queryBuilderService.findManyWithPagination(options);
 
@@ -157,12 +147,9 @@ describe('QueryBuilderService', () => {
                 hasNextPage: true,
                 hasPreviousPage: true,
             });
-            expect(mockDatabaseService.user.findMany).toHaveBeenCalledWith({
-                where: { deletedAt: null },
-                skip: 5,
-                take: 5,
-                orderBy: { createdAt: 'desc' },
-            });
+            expect(mockUserRepository.findMany).toHaveBeenCalledWith(
+                expect.objectContaining({ page: 2, limit: 5 }),
+            );
         });
 
         it('should limit maximum page size to 100', async () => {
@@ -172,17 +159,13 @@ describe('QueryBuilderService', () => {
                 searchFields: ['firstName', 'lastName', 'email'],
             };
 
-            mockDatabaseService.user.findMany.mockResolvedValue(mockUsers);
-            mockDatabaseService.user.count.mockResolvedValue(2);
+            mockUserRepository.findMany.mockResolvedValue(makePaginatedResult(mockUsers, 2));
 
             await queryBuilderService.findManyWithPagination(options);
 
-            expect(mockDatabaseService.user.findMany).toHaveBeenCalledWith({
-                where: { deletedAt: null },
-                skip: 0,
-                take: 100,
-                orderBy: { createdAt: 'desc' },
-            });
+            expect(mockUserRepository.findMany).toHaveBeenCalledWith(
+                expect.objectContaining({ limit: 100 }),
+            );
         });
 
         it('should handle custom filters', async () => {
@@ -193,29 +176,21 @@ describe('QueryBuilderService', () => {
                 customFilters: { isVerified: true },
             };
 
-            mockDatabaseService.user.findMany.mockResolvedValue(mockUsers);
-            mockDatabaseService.user.count.mockResolvedValue(2);
+            mockUserRepository.findMany.mockResolvedValue(makePaginatedResult(mockUsers, 2));
 
             await queryBuilderService.findManyWithPagination(options);
 
-            expect(mockDatabaseService.user.findMany).toHaveBeenCalledWith({
-                where: {
-                    deletedAt: null,
-                    OR: [
-                        { firstName: { contains: 'test', mode: 'insensitive' } },
-                        { lastName: { contains: 'test', mode: 'insensitive' } },
-                        { email: { contains: 'test', mode: 'insensitive' } },
-                    ],
-                    role: Role.ADMIN,
-                    isVerified: true,
-                },
-                skip: 0,
-                take: 10,
-                orderBy: { createdAt: 'desc' },
-            });
+            expect(mockUserRepository.findMany).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    customFilters: expect.objectContaining({
+                        role: Role.ADMIN,
+                        isVerified: true,
+                    }),
+                }),
+            );
         });
 
-        it('should handle relations in include clause', async () => {
+        it('should handle relations', async () => {
             const options: QueryBuilderOptions = {
                 model: 'user',
                 dto: mockDto,
@@ -223,32 +198,15 @@ describe('QueryBuilderService', () => {
                 relations: ['profile', 'settings.notifications'],
             };
 
-            mockDatabaseService.user.findMany.mockResolvedValue(mockUsers);
-            mockDatabaseService.user.count.mockResolvedValue(2);
+            mockUserRepository.findMany.mockResolvedValue(makePaginatedResult(mockUsers, 2));
 
             await queryBuilderService.findManyWithPagination(options);
 
-            expect(mockDatabaseService.user.findMany).toHaveBeenCalledWith({
-                where: {
-                    deletedAt: null,
-                    OR: [
-                        { firstName: { contains: 'test', mode: 'insensitive' } },
-                        { lastName: { contains: 'test', mode: 'insensitive' } },
-                        { email: { contains: 'test', mode: 'insensitive' } },
-                    ],
-                },
-                skip: 0,
-                take: 10,
-                orderBy: { createdAt: 'desc' },
-                include: {
-                    profile: true,
-                    settings: {
-                        include: {
-                            notifications: true,
-                        },
-                    },
-                },
-            });
+            expect(mockUserRepository.findMany).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    relations: ['profile', 'settings.notifications'],
+                }),
+            );
         });
 
         it('should handle domain filters', async () => {
@@ -258,25 +216,17 @@ describe('QueryBuilderService', () => {
                 searchFields: ['firstName', 'lastName', 'email'],
             };
 
-            mockDatabaseService.user.findMany.mockResolvedValue(mockUsers);
-            mockDatabaseService.user.count.mockResolvedValue(2);
+            mockUserRepository.findMany.mockResolvedValue(makePaginatedResult(mockUsers, 2));
 
             await queryBuilderService.findManyWithPagination(options);
 
-            expect(mockDatabaseService.user.findMany).toHaveBeenCalledWith({
-                where: {
-                    deletedAt: null,
-                    OR: [
-                        { firstName: { contains: 'test', mode: 'insensitive' } },
-                        { lastName: { contains: 'test', mode: 'insensitive' } },
-                        { email: { contains: 'test', mode: 'insensitive' } },
-                    ],
-                    email: { endsWith: '@example.com' },
-                },
-                skip: 0,
-                take: 10,
-                orderBy: { createdAt: 'desc' },
-            });
+            expect(mockUserRepository.findMany).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    customFilters: expect.objectContaining({
+                        email: { endsWith: '@example.com' },
+                    }),
+                }),
+            );
         });
 
         it('should handle date filters', async () => {
@@ -286,25 +236,17 @@ describe('QueryBuilderService', () => {
                 searchFields: ['firstName', 'lastName', 'email'],
             };
 
-            mockDatabaseService.user.findMany.mockResolvedValue(mockUsers);
-            mockDatabaseService.user.count.mockResolvedValue(2);
+            mockUserRepository.findMany.mockResolvedValue(makePaginatedResult(mockUsers, 2));
 
             await queryBuilderService.findManyWithPagination(options);
 
-            expect(mockDatabaseService.user.findMany).toHaveBeenCalledWith({
-                where: {
-                    deletedAt: null,
-                    OR: [
-                        { firstName: { contains: 'test', mode: 'insensitive' } },
-                        { lastName: { contains: 'test', mode: 'insensitive' } },
-                        { email: { contains: 'test', mode: 'insensitive' } },
-                    ],
-                    createdDate: { gte: new Date('2023-01-01') },
-                },
-                skip: 0,
-                take: 10,
-                orderBy: { createdAt: 'desc' },
-            });
+            expect(mockUserRepository.findMany).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    customFilters: expect.objectContaining({
+                        createdDate: { gte: new Date('2023-01-01') },
+                    }),
+                }),
+            );
         });
 
         it('should handle array filters', async () => {
@@ -314,25 +256,17 @@ describe('QueryBuilderService', () => {
                 searchFields: ['firstName', 'lastName', 'email'],
             };
 
-            mockDatabaseService.user.findMany.mockResolvedValue(mockUsers);
-            mockDatabaseService.user.count.mockResolvedValue(2);
+            mockUserRepository.findMany.mockResolvedValue(makePaginatedResult(mockUsers, 2));
 
             await queryBuilderService.findManyWithPagination(options);
 
-            expect(mockDatabaseService.user.findMany).toHaveBeenCalledWith({
-                where: {
-                    deletedAt: null,
-                    OR: [
-                        { firstName: { contains: 'test', mode: 'insensitive' } },
-                        { lastName: { contains: 'test', mode: 'insensitive' } },
-                        { email: { contains: 'test', mode: 'insensitive' } },
-                    ],
-                    role: { in: [Role.USER, Role.ADMIN] },
-                },
-                skip: 0,
-                take: 10,
-                orderBy: { createdAt: 'desc' },
-            });
+            expect(mockUserRepository.findMany).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    customFilters: expect.objectContaining({
+                        role: { in: [Role.USER, Role.ADMIN] },
+                    }),
+                }),
+            );
         });
 
         it('should handle name filters with case insensitive search', async () => {
@@ -342,28 +276,20 @@ describe('QueryBuilderService', () => {
                 searchFields: ['firstName', 'lastName', 'email'],
             };
 
-            mockDatabaseService.user.findMany.mockResolvedValue(mockUsers);
-            mockDatabaseService.user.count.mockResolvedValue(2);
+            mockUserRepository.findMany.mockResolvedValue(makePaginatedResult(mockUsers, 2));
 
             await queryBuilderService.findManyWithPagination(options);
 
-            expect(mockDatabaseService.user.findMany).toHaveBeenCalledWith({
-                where: {
-                    deletedAt: null,
-                    OR: [
-                        { firstName: { contains: 'test', mode: 'insensitive' } },
-                        { lastName: { contains: 'test', mode: 'insensitive' } },
-                        { email: { contains: 'test', mode: 'insensitive' } },
-                    ],
-                    firstName: { contains: 'John', mode: 'insensitive' },
-                },
-                skip: 0,
-                take: 10,
-                orderBy: { createdAt: 'desc' },
-            });
+            expect(mockUserRepository.findMany).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    customFilters: expect.objectContaining({
+                        firstName: { contains: 'John', mode: 'insensitive' },
+                    }),
+                }),
+            );
         });
 
-        it('should ignore pagination and search fields in where clause', async () => {
+        it('should ignore pagination and search fields in customFilters', async () => {
             const options: QueryBuilderOptions = {
                 model: 'user',
                 dto: {
@@ -377,25 +303,23 @@ describe('QueryBuilderService', () => {
                 searchFields: ['firstName', 'lastName', 'email'],
             };
 
-            mockDatabaseService.user.findMany.mockResolvedValue(mockUsers);
-            mockDatabaseService.user.count.mockResolvedValue(2);
+            mockUserRepository.findMany.mockResolvedValue(makePaginatedResult(mockUsers, 2));
 
             await queryBuilderService.findManyWithPagination(options);
 
-            expect(mockDatabaseService.user.findMany).toHaveBeenCalledWith({
-                where: {
-                    deletedAt: null,
-                    OR: [
-                        { firstName: { contains: 'test', mode: 'insensitive' } },
-                        { lastName: { contains: 'test', mode: 'insensitive' } },
-                        { email: { contains: 'test', mode: 'insensitive' } },
-                    ],
-                    role: Role.USER,
-                },
-                skip: 0,
-                take: 10,
-                orderBy: { email: 'asc' },
-            });
+            expect(mockUserRepository.findMany).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    sortBy: 'email',
+                    sortOrder: 'asc',
+                    customFilters: expect.objectContaining({ role: Role.USER }),
+                }),
+            );
+            const callArg = mockUserRepository.findMany.mock.calls[0][0];
+            expect(callArg.customFilters).not.toHaveProperty('page');
+            expect(callArg.customFilters).not.toHaveProperty('limit');
+            expect(callArg.customFilters).not.toHaveProperty('search');
+            expect(callArg.customFilters).not.toHaveProperty('sortBy');
+            expect(callArg.customFilters).not.toHaveProperty('sortOrder');
         });
 
         it('should handle undefined and null values in dto', async () => {
@@ -411,35 +335,28 @@ describe('QueryBuilderService', () => {
                 searchFields: ['firstName', 'lastName', 'email'],
             };
 
-            mockDatabaseService.user.findMany.mockResolvedValue(mockUsers);
-            mockDatabaseService.user.count.mockResolvedValue(2);
+            mockUserRepository.findMany.mockResolvedValue(makePaginatedResult(mockUsers, 2));
 
             await queryBuilderService.findManyWithPagination(options);
 
-            expect(mockDatabaseService.user.findMany).toHaveBeenCalledWith({
-                where: {
-                    deletedAt: null,
-                    email: 'test@example.com',
-                },
-                skip: 0,
-                take: 10,
-                orderBy: { createdAt: 'desc' },
-            });
+            const callArg = mockUserRepository.findMany.mock.calls[0][0];
+            expect(callArg.customFilters).not.toHaveProperty('role');
+            expect(callArg.customFilters).not.toHaveProperty('isVerified');
+            expect(callArg.customFilters).toHaveProperty('email', 'test@example.com');
         });
 
-        it('should handle customFilters merging into whereClause', async () => {
+        it('should handle customFilters merging into query', async () => {
             const options: QueryBuilderOptions = {
                 model: 'user',
                 dto: { ...mockDto },
                 searchFields: ['firstName', 'lastName', 'email'],
                 customFilters: { isActive: true },
             };
-            mockDatabaseService.user.findMany.mockResolvedValue(mockUsers);
-            mockDatabaseService.user.count.mockResolvedValue(2);
+            mockUserRepository.findMany.mockResolvedValue(makePaginatedResult(mockUsers, 2));
             await queryBuilderService.findManyWithPagination(options);
-            expect(mockDatabaseService.user.findMany).toHaveBeenCalledWith(
+            expect(mockUserRepository.findMany).toHaveBeenCalledWith(
                 expect.objectContaining({
-                    where: expect.objectContaining({ isActive: true }),
+                    customFilters: expect.objectContaining({ isActive: true }),
                 }),
             );
         });
@@ -449,12 +366,11 @@ describe('QueryBuilderService', () => {
                 model: 'user',
                 dto: { page: 1, limit: 10 },
             };
-            mockDatabaseService.user.findMany.mockResolvedValue(mockUsers);
-            mockDatabaseService.user.count.mockResolvedValue(2);
+            mockUserRepository.findMany.mockResolvedValue(makePaginatedResult(mockUsers, 2));
             await queryBuilderService.findManyWithPagination(options);
-            expect(mockDatabaseService.user.findMany).toHaveBeenCalledWith(
+            expect(mockUserRepository.findMany).toHaveBeenCalledWith(
                 expect.objectContaining({
-                    where: { deletedAt: null },
+                    searchFields: undefined,
                 }),
             );
         });
@@ -465,13 +381,10 @@ describe('QueryBuilderService', () => {
                 dto: { limit: 10 },
                 searchFields: ['firstName'],
             };
-            mockDatabaseService.user.findMany.mockResolvedValue(mockUsers);
-            mockDatabaseService.user.count.mockResolvedValue(2);
+            mockUserRepository.findMany.mockResolvedValue(makePaginatedResult(mockUsers, 2));
             await queryBuilderService.findManyWithPagination(options);
-            expect(mockDatabaseService.user.findMany).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    skip: 0,
-                }),
+            expect(mockUserRepository.findMany).toHaveBeenCalledWith(
+                expect.objectContaining({ page: 1 }),
             );
         });
 
@@ -481,13 +394,10 @@ describe('QueryBuilderService', () => {
                 dto: { page: 1 },
                 searchFields: ['firstName'],
             };
-            mockDatabaseService.user.findMany.mockResolvedValue(mockUsers);
-            mockDatabaseService.user.count.mockResolvedValue(2);
+            mockUserRepository.findMany.mockResolvedValue(makePaginatedResult(mockUsers, 2));
             await queryBuilderService.findManyWithPagination(options);
-            expect(mockDatabaseService.user.findMany).toHaveBeenCalledWith(
-                expect.objectContaining({
-                    take: 10,
-                }),
+            expect(mockUserRepository.findMany).toHaveBeenCalledWith(
+                expect.objectContaining({ limit: 10 }),
             );
         });
 
@@ -497,12 +407,11 @@ describe('QueryBuilderService', () => {
                 dto: { ...mockDto, lastName: 'Smith' },
                 searchFields: ['firstName', 'lastName', 'email'],
             };
-            mockDatabaseService.user.findMany.mockResolvedValue(mockUsers);
-            mockDatabaseService.user.count.mockResolvedValue(2);
+            mockUserRepository.findMany.mockResolvedValue(makePaginatedResult(mockUsers, 2));
             await queryBuilderService.findManyWithPagination(options);
-            expect(mockDatabaseService.user.findMany).toHaveBeenCalledWith(
+            expect(mockUserRepository.findMany).toHaveBeenCalledWith(
                 expect.objectContaining({
-                    where: expect.objectContaining({
+                    customFilters: expect.objectContaining({
                         lastName: { contains: 'Smith', mode: 'insensitive' },
                     }),
                 }),
@@ -515,41 +424,51 @@ describe('QueryBuilderService', () => {
                 dto: { ...mockDto, updatedDate: '2023-01-05' },
                 searchFields: ['firstName', 'lastName', 'email'],
             };
-            mockDatabaseService.user.findMany.mockResolvedValue(mockUsers);
-            mockDatabaseService.user.count.mockResolvedValue(2);
+            mockUserRepository.findMany.mockResolvedValue(makePaginatedResult(mockUsers, 2));
             await queryBuilderService.findManyWithPagination(options);
-            expect(mockDatabaseService.user.findMany).toHaveBeenCalledWith(
+            expect(mockUserRepository.findMany).toHaveBeenCalledWith(
                 expect.objectContaining({
-                    where: expect.objectContaining({
+                    customFilters: expect.objectContaining({
                         updatedDate: { gte: new Date('2023-01-05') },
                     }),
+                }),
+            );
+        });
+
+        it('should handle non-string scalar values in dto (else branch)', async () => {
+            const options: QueryBuilderOptions = {
+                model: 'user',
+                dto: { page: 1, limit: 10, isVerified: true },
+                searchFields: ['firstName', 'lastName', 'email'],
+            };
+            mockUserRepository.findMany.mockResolvedValue(makePaginatedResult(mockUsers, 2));
+            await queryBuilderService.findManyWithPagination(options);
+            expect(mockUserRepository.findMany).toHaveBeenCalledWith(
+                expect.objectContaining({
+                    customFilters: expect.objectContaining({ isVerified: true }),
                 }),
             );
         });
     });
 
     describe('getCount', () => {
-        it('should return count with default filters', async () => {
-            mockDatabaseService.user.count.mockResolvedValue(10);
+        it('should return count with no filters', async () => {
+            mockUserRepository.count.mockResolvedValue(10);
 
             const result = await queryBuilderService.getCount('user');
 
             expect(result).toBe(10);
-            expect(mockDatabaseService.user.count).toHaveBeenCalledWith({
-                where: { deletedAt: null },
-            });
+            expect(mockUserRepository.count).toHaveBeenCalledWith(undefined);
         });
 
         it('should return count with custom filters', async () => {
             const filters = { role: Role.ADMIN, isVerified: true };
-            mockDatabaseService.user.count.mockResolvedValue(5);
+            mockUserRepository.count.mockResolvedValue(5);
 
             const result = await queryBuilderService.getCount('user', filters);
 
             expect(result).toBe(5);
-            expect(mockDatabaseService.user.count).toHaveBeenCalledWith({
-                where: { deletedAt: null, ...filters },
-            });
+            expect(mockUserRepository.count).toHaveBeenCalledWith(filters);
         });
     });
 });
