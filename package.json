@@ -15,6 +15,7 @@
         "dev": "npm run proto:generate && nest start --watch",
         "lint": "eslint \"{src,test}/**/*.ts\" --fix",
         "test": "jest --config test/jest.json --runInBand",
+        "test:cov": "jest --config test/jest.json --runInBand --coverage",
         "proto:generate": "npx nestjs-grpc generate --proto ./src/protos --output ./src/generated",
         "prepare": "husky"
     },

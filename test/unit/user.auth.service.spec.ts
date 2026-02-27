@@ -8,7 +8,6 @@ import { UserAuthService } from 'src/modules/user/services/user.auth.service';
 
 describe('UserAuthService', () => {
     let userAuthService: UserAuthService;
-    let databaseService: DatabaseService;
 
     const mockUserRepository = {
         findById: jest.fn(),
@@ -34,7 +33,6 @@ describe('UserAuthService', () => {
         }).compile();
 
         userAuthService = module.get<UserAuthService>(UserAuthService);
-        databaseService = module.get<DatabaseService>(DatabaseService);
     });
 
     afterEach(() => {
