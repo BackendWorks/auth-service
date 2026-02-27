@@ -1,5 +1,4 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { Role } from '@backendworks/auth-db';
 
 import { DatabaseService } from 'src/common/services/database.service';
 import { UserResponseDto } from 'src/modules/user/dtos/user.response.dto';
@@ -45,7 +44,7 @@ describe('UserAuthService', () => {
             id: userId,
             email: 'test@example.com',
             password: 'hashedPassword',
-            role: Role.USER,
+            role: 'USER',
             firstName: 'Test',
             lastName: 'User',
             isVerified: true,
@@ -81,7 +80,7 @@ describe('UserAuthService', () => {
             id: 'user-123',
             email,
             password: 'hashedPassword',
-            role: Role.USER,
+            role: 'USER',
             firstName: 'Test',
             lastName: 'User',
             isVerified: true,
@@ -125,7 +124,7 @@ describe('UserAuthService', () => {
             id: userId,
             email: 'old@example.com',
             password: 'hashedPassword',
-            role: Role.USER,
+            role: 'USER',
             firstName: 'Old',
             lastName: 'Name',
             isVerified: true,
@@ -201,7 +200,7 @@ describe('UserAuthService', () => {
             id: 'new-user-123',
             email: userData.email,
             password: userData.password,
-            role: Role.USER,
+            role: 'USER',
             firstName: userData.firstName,
             lastName: userData.lastName,
             isVerified: false,
@@ -225,7 +224,7 @@ describe('UserAuthService', () => {
                 phoneNumber: userData.phoneNumber,
                 avatar: userData.avatar,
                 password: userData.password,
-                role: Role.USER,
+                role: 'USER',
             });
         });
 
@@ -253,7 +252,7 @@ describe('UserAuthService', () => {
                 phoneNumber: undefined,
                 avatar: undefined,
                 password: minimalUserData.password,
-                role: Role.USER,
+                role: 'USER',
             });
         });
 

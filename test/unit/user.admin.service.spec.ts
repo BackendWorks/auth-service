@@ -1,6 +1,5 @@
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { Role } from '@backendworks/auth-db';
 
 import { DatabaseService } from 'src/common/services/database.service';
 import { QueryBuilderService } from 'src/common/services/query-builder.service';
@@ -58,7 +57,7 @@ describe('UserAdminService', () => {
                     email: 'user1@example.com',
                     firstName: 'User',
                     lastName: 'One',
-                    role: Role.USER,
+                    role: 'USER',
                     isVerified: true,
                     phoneNumber: null,
                     avatar: null,
@@ -71,7 +70,7 @@ describe('UserAdminService', () => {
                     email: 'user2@example.com',
                     firstName: 'User',
                     lastName: 'Two',
-                    role: Role.ADMIN,
+                    role: 'ADMIN',
                     isVerified: false,
                     phoneNumber: '+1234567890',
                     avatar: 'https://example.com/avatar.jpg',
@@ -129,7 +128,7 @@ describe('UserAdminService', () => {
             id: userId,
             email: 'test@example.com',
             password: 'hashedPassword',
-            role: Role.USER,
+            role: 'USER',
             firstName: 'Test',
             lastName: 'User',
             isVerified: true,

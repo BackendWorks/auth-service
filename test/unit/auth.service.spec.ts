@@ -2,7 +2,6 @@ import { ConflictException, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
-import { Role } from '@backendworks/auth-db';
 
 import { HashService } from 'src/common/services/hash.service';
 import { AuthLoginDto } from 'src/modules/auth/dtos/auth.login.dto';
@@ -86,7 +85,7 @@ describe('AuthService', () => {
             const mockToken = 'valid.jwt.token';
             const mockPayload: IAuthPayload = {
                 id: 'user-123',
-                role: Role.USER,
+                role: 'USER',
                 tokenType: TokenType.ACCESS_TOKEN,
             };
 
@@ -117,7 +116,7 @@ describe('AuthService', () => {
         it('should generate access and refresh tokens successfully', async () => {
             const mockUser: IAuthPayload = {
                 id: 'user-123',
-                role: Role.USER,
+                role: 'USER',
             };
             const accessToken = 'access.jwt.token';
             const refreshToken = 'refresh.jwt.token';
@@ -145,7 +144,7 @@ describe('AuthService', () => {
         it('should handle token generation errors', async () => {
             const mockUser: IAuthPayload = {
                 id: 'user-123',
-                role: Role.USER,
+                role: 'USER',
             };
             const mockError = new Error('Token generation failed');
 
@@ -177,7 +176,7 @@ describe('AuthService', () => {
                 id: 'user-123',
                 email: 'test@example.com',
                 password: 'hashedPassword',
-                role: Role.USER,
+                role: 'USER',
                 firstName: 'Test',
                 lastName: 'User',
                 isVerified: true,
@@ -205,7 +204,7 @@ describe('AuthService', () => {
                 id: 'user-123',
                 email: 'test@example.com',
                 password: 'hashedPassword',
-                role: Role.USER,
+                role: 'USER',
                 firstName: 'Test',
                 lastName: 'User',
                 isVerified: true,
@@ -255,7 +254,7 @@ describe('AuthService', () => {
                 id: 'existing-user',
                 email: 'newuser@example.com',
                 password: 'hashedPassword',
-                role: Role.USER,
+                role: 'USER',
                 firstName: 'Existing',
                 lastName: 'User',
                 isVerified: true,
@@ -280,7 +279,7 @@ describe('AuthService', () => {
                 id: 'new-user-123',
                 email: 'newuser@example.com',
                 password: hashedPassword,
-                role: Role.USER,
+                role: 'USER',
                 firstName: 'New',
                 lastName: 'User',
                 isVerified: false,
@@ -336,7 +335,7 @@ describe('AuthService', () => {
                 id: 'new-user-123',
                 email: 'newuser@example.com',
                 password: hashedPassword,
-                role: Role.USER,
+                role: 'USER',
                 firstName: '',
                 lastName: '',
                 isVerified: false,

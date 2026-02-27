@@ -1,5 +1,4 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { Role } from '@backendworks/auth-db';
 
 import { DatabaseService } from 'src/common/services/database.service';
 import { QueryBuilderService } from 'src/common/services/query-builder.service';
@@ -41,7 +40,7 @@ describe('QueryBuilderService', () => {
                 email: 'user1@example.com',
                 firstName: 'User',
                 lastName: 'One',
-                role: Role.USER,
+                role: 'USER',
                 createdAt: new Date('2023-01-01'),
                 updatedAt: new Date('2023-01-01'),
                 deletedAt: null,
@@ -51,7 +50,7 @@ describe('QueryBuilderService', () => {
                 email: 'user2@example.com',
                 firstName: 'User',
                 lastName: 'Two',
-                role: Role.ADMIN,
+                role: 'ADMIN',
                 createdAt: new Date('2023-01-02'),
                 updatedAt: new Date('2023-01-02'),
                 deletedAt: null,
@@ -171,7 +170,7 @@ describe('QueryBuilderService', () => {
         it('should handle custom filters', async () => {
             const options: QueryBuilderOptions = {
                 model: 'user',
-                dto: { ...mockDto, role: Role.ADMIN },
+                dto: { ...mockDto, role: 'ADMIN' },
                 searchFields: ['firstName', 'lastName', 'email'],
                 customFilters: { isVerified: true },
             };
@@ -183,7 +182,7 @@ describe('QueryBuilderService', () => {
             expect(mockUserRepository.findMany).toHaveBeenCalledWith(
                 expect.objectContaining({
                     customFilters: expect.objectContaining({
-                        role: Role.ADMIN,
+                        role: 'ADMIN',
                         isVerified: true,
                     }),
                 }),
@@ -252,7 +251,7 @@ describe('QueryBuilderService', () => {
         it('should handle array filters', async () => {
             const options: QueryBuilderOptions = {
                 model: 'user',
-                dto: { ...mockDto, role: [Role.USER, Role.ADMIN] },
+                dto: { ...mockDto, role: ['USER', 'ADMIN'] },
                 searchFields: ['firstName', 'lastName', 'email'],
             };
 
@@ -263,7 +262,7 @@ describe('QueryBuilderService', () => {
             expect(mockUserRepository.findMany).toHaveBeenCalledWith(
                 expect.objectContaining({
                     customFilters: expect.objectContaining({
-                        role: { in: [Role.USER, Role.ADMIN] },
+                        role: { in: ['USER', 'ADMIN'] },
                     }),
                 }),
             );
@@ -298,7 +297,7 @@ describe('QueryBuilderService', () => {
                     search: 'test',
                     sortBy: 'email',
                     sortOrder: 'asc',
-                    role: Role.USER,
+                    role: 'USER',
                 },
                 searchFields: ['firstName', 'lastName', 'email'],
             };
@@ -311,7 +310,7 @@ describe('QueryBuilderService', () => {
                 expect.objectContaining({
                     sortBy: 'email',
                     sortOrder: 'asc',
-                    customFilters: expect.objectContaining({ role: Role.USER }),
+                    customFilters: expect.objectContaining({ role: 'USER' }),
                 }),
             );
             const callArg = mockUserRepository.findMany.mock.calls[0][0];
@@ -462,7 +461,7 @@ describe('QueryBuilderService', () => {
         });
 
         it('should return count with custom filters', async () => {
-            const filters = { role: Role.ADMIN, isVerified: true };
+            const filters = { role: 'ADMIN', isVerified: true };
             mockUserRepository.count.mockResolvedValue(5);
 
             const result = await queryBuilderService.getCount('user', filters);

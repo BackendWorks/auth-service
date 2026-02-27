@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { Role } from '@backendworks/auth-db';
 import { DatabaseService } from 'src/common/services/database.service';
 import { UserResponseDto } from '../dtos/user.response.dto';
 import { UserUpdateDto } from '../dtos/user.update.dto';
@@ -34,7 +33,7 @@ export class UserAuthService {
             phoneNumber: data.phoneNumber,
             avatar: data.avatar,
             password: data.password,
-            role: Role.USER,
+            role: 'USER',
         }) as Promise<UserResponseDto>;
     }
 }
