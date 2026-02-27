@@ -351,7 +351,7 @@
     "@babel/helper-validator-identifier" "^7.24.5"
     to-fast-properties "^2.0.0"
 
-"@backendworks/auth-db@^1.0.6":
+"@backendworks/auth-db@^1.0.5":
   version "1.0.5"
   resolved "https://npm.pkg.github.com/download/@backendworks/auth-db/1.0.5/b6abdfbef74528a5e329da5463f0893d84850ca1#b6abdfbef74528a5e329da5463f0893d84850ca1"
   integrity sha512-BtOr/nuaJI1uQYx34dChbPILEL/579TSNh55uM1ohgnShzs4PjYvEEZ1SnNOLOv01hmQKu/w0vK2oYSiE30z1g==
