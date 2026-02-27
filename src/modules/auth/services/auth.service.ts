@@ -1,7 +1,6 @@
-import { ConflictException, Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { ClientProxy } from '@nestjs/microservices';
 
 import { HashService } from 'src/common/services/hash.service';
 
@@ -10,11 +9,9 @@ import { AuthResponseDto } from '../dtos/auth.response.dto';
 import { AuthSignupDto } from '../dtos/auth.signup.dto';
 import { IAuthPayload, ITokenResponse, TokenType } from '../interfaces/auth.interface';
 import { UserAuthService } from 'src/modules/user/services/user.auth.service';
-import { AUTH_WORKER_CLIENT } from '../auth.module';
 
 @Injectable()
 export class AuthService {
-    private readonly logger = new Logger(AuthService.name);
     private readonly accessTokenSecret: string;
     private readonly refreshTokenSecret: string;
     private readonly accessTokenExp: string;
@@ -25,7 +22,6 @@ export class AuthService {
         private readonly jwtService: JwtService,
         private readonly hashService: HashService,
         private readonly userAuthService: UserAuthService,
-        @Inject(AUTH_WORKER_CLIENT) private readonly authWorkerClient: ClientProxy,
     ) {
         this.accessTokenSecret = this.configService.get<string>('auth.accessToken.secret') ?? '';
         this.refreshTokenSecret = this.configService.get<string>('auth.refreshToken.secret') ?? '';
@@ -98,23 +94,6 @@ export class AuthService {
             id: createdUser.id,
             role: createdUser.role,
         });
-
-        // Emit async event to auth-worker for welcome email dispatch.
-        // Fire-and-forget: failures are logged but do not affect the signup response.
-        this.authWorkerClient
-            .emit('user.registered', {
-                userId: createdUser.id,
-                email: createdUser.email,
-                firstName: createdUser.firstName,
-                createdAt: new Date().toISOString(),
-            })
-            .subscribe({
-                error: err =>
-                    this.logger.error(
-                        `Failed to emit user.registered for userId: ${createdUser.id}`,
-                        err,
-                    ),
-            });
 
         return { ...tokens, user: createdUser };
     }

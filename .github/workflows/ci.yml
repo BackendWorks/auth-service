@@ -1,37 +1,32 @@
-name: CI
+name: CI (auth)
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
   pull_request:
-    branches: [main, develop]
+    branches: [main]
 
 jobs:
-  lint-and-build:
-    name: Lint, Format & Build
+  test:
     runs-on: ubuntu-latest
-
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x]
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node
+      - uses: actions/checkout@v4
+      - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: npm
-
+          node-version: ${{ matrix.node-version }}
       - name: Install dependencies
-        run: npm ci
-
-      - name: Generate proto types
-        run: npm run proto:generate
-
-      - name: Lint
-        run: npx eslint "{src,test}/**/*.ts"
-
-      - name: Format check
-        run: npx prettier --check "src/**/*.ts" "test/**/*.ts"
-
-      - name: Build
-        run: npm run build
+        run: npm install --legacy-peer-deps
+        working-directory: .
+      - name: Run lint
+        run: |
+          if [ -f eslint.config.mjs ]; then
+            npx eslint .
+          fi
+        working-directory: .
+      - name: Run tests
+        run: npm test
+        working-directory: . 

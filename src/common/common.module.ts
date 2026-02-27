@@ -67,10 +67,6 @@ import { CacheableMemory } from 'cacheable';
                 // GRPC Configuration
                 GRPC_URL: Joi.string().required(),
                 GRPC_PACKAGE: Joi.string().default('auth'),
-
-                // RabbitMQ
-                RABBITMQ_URL: Joi.string().required(),
-                RABBITMQ_AUTH_WORKER_QUEUE: Joi.string().default('auth_worker_queue'),
             }),
         }),
         CacheModule.registerAsync({
