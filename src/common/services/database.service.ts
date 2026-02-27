@@ -1,14 +1,22 @@
-import { Injectable, OnModuleInit, OnModuleDestroy, Logger } from '@nestjs/common';
+import { Injectable, OnModuleDestroy, OnModuleInit, Logger } from '@nestjs/common';
 import { HealthIndicatorResult } from '@nestjs/terminus';
-import { PrismaClient } from '@prisma/client';
+import { createAuthDbManager, IAuthDbManager, IUserRepository } from '@backendworks/auth-db';
 
 @Injectable()
-export class DatabaseService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
+export class DatabaseService implements OnModuleInit, OnModuleDestroy {
     private readonly logger = new Logger(DatabaseService.name);
+    private readonly dbManager: IAuthDbManager;
+
+    constructor() {
+        this.dbManager = createAuthDbManager(process.env.DATABASE_URL as string);
+    }
+
+    get userRepository(): IUserRepository {
+        return this.dbManager.userRepository;
+    }
 
     async onModuleInit(): Promise<void> {
         try {
-            await this.$connect();
             this.logger.log('Database connection established');
         } catch (error) {
             this.logger.error('Failed to connect to database', error);
@@ -18,7 +26,7 @@ export class DatabaseService extends PrismaClient implements OnModuleInit, OnMod
 
     async onModuleDestroy(): Promise<void> {
         try {
-            await this.$disconnect();
+            await this.dbManager.disconnect();
             this.logger.log('Database connection closed');
         } catch (error) {
             this.logger.error('Error closing database connection', error);
@@ -27,7 +35,7 @@ export class DatabaseService extends PrismaClient implements OnModuleInit, OnMod
 
     async isHealthy(): Promise<HealthIndicatorResult> {
         try {
-            await this.$queryRaw`SELECT 1`;
+            await this.dbManager.userRepository.count();
             return {
                 database: {
                     status: 'up',

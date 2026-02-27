@@ -1,5 +1,5 @@
 import { ApiHideProperty, ApiProperty } from '@nestjs/swagger';
-import { $Enums, User } from '@prisma/client';
+import { User, Role } from '@backendworks/auth-db';
 import { Exclude } from 'class-transformer';
 
 export class UserResponseDto implements User {
@@ -44,9 +44,9 @@ export class UserResponseDto implements User {
 
     @ApiProperty({
         description: 'User role in the system',
-        enum: $Enums.Role,
+        enum: Role,
     })
-    role: $Enums.Role;
+    role: Role;
 
     @ApiProperty({
         description: 'Account creation timestamp',

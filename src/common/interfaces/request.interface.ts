@@ -1,4 +1,4 @@
-import { Role } from '@prisma/client';
+import { Role } from '@backendworks/auth-db';
 
 export interface IAuthUserPayload {
     id: string;

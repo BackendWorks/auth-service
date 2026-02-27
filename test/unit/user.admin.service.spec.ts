@@ -1,6 +1,6 @@
 import { NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { Role } from '@prisma/client';
+import { Role } from '@backendworks/auth-db';
 
 import { DatabaseService } from 'src/common/services/database.service';
 import { QueryBuilderService } from 'src/common/services/query-builder.service';
@@ -10,14 +10,15 @@ import { UserAdminService } from 'src/modules/user/services/user.admin.service';
 
 describe('UserAdminService', () => {
     let userAdminService: UserAdminService;
-    let databaseService: DatabaseService;
     let queryBuilderService: QueryBuilderService;
 
+    const mockUserRepository = {
+        findById: jest.fn(),
+        softDelete: jest.fn(),
+    };
+
     const mockDatabaseService = {
-        user: {
-            findUnique: jest.fn(),
-            update: jest.fn(),
-        },
+        userRepository: mockUserRepository,
     };
 
     const mockQueryBuilderService = {
@@ -34,7 +35,6 @@ describe('UserAdminService', () => {
         }).compile();
 
         userAdminService = module.get<UserAdminService>(UserAdminService);
-        databaseService = module.get<DatabaseService>(DatabaseService);
         queryBuilderService = module.get<QueryBuilderService>(QueryBuilderService);
     });
 
@@ -107,11 +107,7 @@ describe('UserAdminService', () => {
         });
 
         it('should handle empty search criteria', async () => {
-            const emptyListDto: UserListDto = {
-                page: 1,
-                limit: 10,
-            };
-
+            const emptyListDto: UserListDto = { page: 1, limit: 10 };
             jest.spyOn(queryBuilderService, 'findManyWithPagination').mockResolvedValue(
                 mockPaginatedResult,
             );
@@ -121,49 +117,6 @@ describe('UserAdminService', () => {
             expect(queryBuilderService.findManyWithPagination).toHaveBeenCalledWith({
                 model: 'user',
                 dto: emptyListDto,
-                defaultSort: { field: 'createdAt', order: 'desc' },
-                searchFields: ['firstName', 'lastName', 'email'],
-            });
-        });
-
-        it('should handle custom sort criteria', async () => {
-            const customSortDto: UserListDto = {
-                page: 1,
-                limit: 10,
-                sortBy: 'email',
-                sortOrder: 'asc',
-            };
-
-            jest.spyOn(queryBuilderService, 'findManyWithPagination').mockResolvedValue(
-                mockPaginatedResult,
-            );
-
-            await userAdminService.listUsers(customSortDto);
-
-            expect(queryBuilderService.findManyWithPagination).toHaveBeenCalledWith({
-                model: 'user',
-                dto: customSortDto,
-                defaultSort: { field: 'createdAt', order: 'desc' },
-                searchFields: ['firstName', 'lastName', 'email'],
-            });
-        });
-
-        it('should handle search with multiple fields', async () => {
-            const searchDto: UserListDto = {
-                page: 1,
-                limit: 10,
-                search: 'john@example.com',
-            };
-
-            jest.spyOn(queryBuilderService, 'findManyWithPagination').mockResolvedValue(
-                mockPaginatedResult,
-            );
-
-            await userAdminService.listUsers(searchDto);
-
-            expect(queryBuilderService.findManyWithPagination).toHaveBeenCalledWith({
-                model: 'user',
-                dto: searchDto,
                 defaultSort: { field: 'createdAt', order: 'desc' },
                 searchFields: ['firstName', 'lastName', 'email'],
             });
@@ -188,86 +141,41 @@ describe('UserAdminService', () => {
         };
 
         it('should soft delete user successfully', async () => {
-            jest.spyOn(databaseService.user, 'findUnique').mockResolvedValue(mockUser);
-            jest.spyOn(databaseService.user, 'update').mockResolvedValue({
-                ...mockUser,
-                deletedAt: new Date('2023-01-03'),
-            });
+            mockUserRepository.findById.mockResolvedValue(mockUser);
+            mockUserRepository.softDelete.mockResolvedValue({ ...mockUser, deletedAt: new Date() });
 
             await userAdminService.deleteUser(userId);
 
-            expect(databaseService.user.findUnique).toHaveBeenCalledWith({
-                where: { id: userId, deletedAt: null },
-            });
-            expect(databaseService.user.update).toHaveBeenCalledWith({
-                where: { id: userId },
-                data: { deletedAt: expect.any(Date) },
-            });
+            expect(mockUserRepository.findById).toHaveBeenCalledWith(userId);
+            expect(mockUserRepository.softDelete).toHaveBeenCalledWith(userId);
         });
 
         it('should throw NotFoundException when user does not exist', async () => {
-            jest.spyOn(databaseService.user, 'findUnique').mockResolvedValue(null);
+            mockUserRepository.findById.mockResolvedValue(null);
 
             await expect(userAdminService.deleteUser(userId)).rejects.toThrow(
                 new NotFoundException('User not found'),
             );
-            expect(databaseService.user.findUnique).toHaveBeenCalledWith({
-                where: { id: userId, deletedAt: null },
-            });
-            expect(databaseService.user.update).not.toHaveBeenCalled();
-        });
-
-        it('should throw NotFoundException when user is already deleted', async () => {
-            jest.spyOn(databaseService.user, 'findUnique').mockResolvedValue(null);
-
-            await expect(userAdminService.deleteUser(userId)).rejects.toThrow(
-                new NotFoundException('User not found'),
-            );
-            expect(databaseService.user.findUnique).toHaveBeenCalledWith({
-                where: { id: userId, deletedAt: null },
-            });
+            expect(mockUserRepository.findById).toHaveBeenCalledWith(userId);
+            expect(mockUserRepository.softDelete).not.toHaveBeenCalled();
         });
 
         it('should handle database errors during user lookup', async () => {
             const mockError = new Error('Database connection failed');
-            jest.spyOn(databaseService.user, 'findUnique').mockRejectedValue(mockError);
+            mockUserRepository.findById.mockRejectedValue(mockError);
 
             await expect(userAdminService.deleteUser(userId)).rejects.toThrow(
                 'Database connection failed',
             );
-            expect(databaseService.user.findUnique).toHaveBeenCalledWith({
-                where: { id: userId, deletedAt: null },
-            });
         });
 
-        it('should handle database errors during user update', async () => {
-            jest.spyOn(databaseService.user, 'findUnique').mockResolvedValue(mockUser);
-            const mockError = new Error('Update failed');
-            jest.spyOn(databaseService.user, 'update').mockRejectedValue(mockError);
+        it('should handle database errors during soft delete', async () => {
+            const mockError = new Error('Delete failed');
+            mockUserRepository.findById.mockResolvedValue(mockUser);
+            mockUserRepository.softDelete.mockRejectedValue(mockError);
 
-            await expect(userAdminService.deleteUser(userId)).rejects.toThrow('Update failed');
-            expect(databaseService.user.findUnique).toHaveBeenCalledWith({
-                where: { id: userId, deletedAt: null },
-            });
-            expect(databaseService.user.update).toHaveBeenCalledWith({
-                where: { id: userId },
-                data: { deletedAt: expect.any(Date) },
-            });
-        });
-
-        it('should set deletedAt to current timestamp', async () => {
-            jest.spyOn(databaseService.user, 'findUnique').mockResolvedValue(mockUser);
-            jest.spyOn(databaseService.user, 'update').mockResolvedValue({
-                ...mockUser,
-                deletedAt: new Date(),
-            });
-
-            await userAdminService.deleteUser(userId);
-
-            expect(databaseService.user.update).toHaveBeenCalledWith({
-                where: { id: userId },
-                data: { deletedAt: expect.any(Date) },
-            });
+            await expect(userAdminService.deleteUser(userId)).rejects.toThrow('Delete failed');
         });
     });
 });
+

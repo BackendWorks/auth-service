@@ -65,82 +65,89 @@ src/
 ## 🛠️ Installation
 
 1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd auth
-   ```
+
+    ```bash
+    git clone <repository-url>
+    cd auth
+    ```
 
 2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+
+    ```bash
+    npm install
+    ```
 
 3. **Environment Configuration**
-   The service includes a pre-configured `.env.docker` file with the following variables:
-   ```env
-   # App Configuration
-   NODE_ENV="local"
-   APP_NAME="@backendworks/auth"
-   APP_CORS_ORIGINS="*"
-   APP_DEBUG=true
+   The service includes a pre-configured `.env` file with the following variables:
 
-   # HTTP Configuration
-   HTTP_ENABLE=true
-   HTTP_HOST="0.0.0.0"
-   HTTP_PORT=9001
-   HTTP_VERSIONING_ENABLE=true
-   HTTP_VERSION=1
+    ```env
+    # App Configuration
+    NODE_ENV="local"
+    APP_NAME="@backendworks/auth"
+    APP_CORS_ORIGINS="*"
+    APP_DEBUG=true
 
-   # Database Configuration
-   DATABASE_URL="postgresql://admin:master123@localhost:5432/postgres?schema=public"
+    # HTTP Configuration
+    HTTP_ENABLE=true
+    HTTP_HOST="0.0.0.0"
+    HTTP_PORT=9001
+    HTTP_VERSIONING_ENABLE=true
+    HTTP_VERSION=1
 
-   # JWT Configuration
-   ACCESS_TOKEN_SECRET_KEY="EAJYjNJUnRGJ6uq1YfGw4NG1pd1z102J"
-   ACCESS_TOKEN_EXPIRED="1d"
-   REFRESH_TOKEN_SECRET_KEY="LcnlpiuHIJ6eS51u1mcOdk0P49r2Crwu"
-   REFRESH_TOKEN_EXPIRED="7d"
+    # Database Configuration
+    DATABASE_URL="postgresql://admin:master123@localhost:5432/postgres?schema=public"
 
-   # Redis Configuration
-   REDIS_URL="redis://localhost:6379"
-   REDIS_KEY_PREFIX="auth:"
-   REDIS_TTL=3600
+    # JWT Configuration
+    ACCESS_TOKEN_SECRET_KEY="EAJYjNJUnRGJ6uq1YfGw4NG1pd1z102J"
+    ACCESS_TOKEN_EXPIRED="1d"
+    REFRESH_TOKEN_SECRET_KEY="LcnlpiuHIJ6eS51u1mcOdk0P49r2Crwu"
+    REFRESH_TOKEN_EXPIRED="7d"
 
-   # gRPC Configuration
-   GRPC_URL="0.0.0.0:50051"
-   GRPC_PACKAGE="auth"
-   ```
+    # Redis Configuration
+    REDIS_URL="redis://localhost:6379"
+    REDIS_KEY_PREFIX="auth:"
+    REDIS_TTL=3600
+
+    # gRPC Configuration
+    GRPC_URL="0.0.0.0:50051"
+    GRPC_PACKAGE="auth"
+    ```
 
 4. **Database Setup**
-   ```bash
-   # Generate Prisma client
-   npm run prisma:generate
 
-   # Run migrations
-   npm run prisma:migrate
+    ```bash
+    # Generate Prisma client
+    npm run prisma:generate
 
-   # (Optional) Open Prisma Studio
-   npm run prisma:studio
-   ```
+    # Run migrations
+    npm run prisma:migrate
+
+    # (Optional) Open Prisma Studio
+    npm run prisma:studio
+    ```
 
 5. **Generate gRPC code**
-   ```bash
-   npm run proto:generate
-   ```
+    ```bash
+    npm run proto:generate
+    ```
 
 ## 🚀 Running the Service
 
 ### Development Mode
+
 ```bash
 npm run dev
 ```
 
 ### Production Mode
+
 ```bash
 npm run build
 npm start
 ```
 
 ### Docker (if available)
+
 ```bash
 docker build -t auth-service .
 docker run -p 9001:9001 auth-service
@@ -151,27 +158,32 @@ docker run -p 9001:9001 auth-service
 ### Authentication Endpoints
 
 #### Public Endpoints
+
 - `POST /auth/login` - User login
 - `POST /auth/signup` - User registration
 - `GET /auth/refresh` - Refresh access token
 
 #### Protected Endpoints
+
 - `GET /user/profile` - Get user profile
 - `PUT /user/profile` - Update user profile
 
 ### User Management Endpoints
 
 #### Admin Only
+
 - `GET /admin/user` - List all users (paginated)
 - `DELETE /admin/user/:id` - Delete user
 
 ### Health Check
+
 - `GET /health` - Service health status
 - `GET /` - Service information
 
 ## 🔌 gRPC Services
 
 ### AuthService
+
 - `ValidateToken` - Validate JWT tokens and return user information
 
 ## 🔧 Configuration
@@ -179,30 +191,36 @@ docker run -p 9001:9001 auth-service
 The service uses a modular configuration system with environment-specific settings:
 
 ### App Configuration
+
 - **Name**: Service name and display information
 - **Environment**: Development, staging, production
 - **Debug**: Debug mode settings
 - **CORS**: Cross-origin resource sharing settings
 
 ### HTTP Configuration
+
 - **Port**: HTTP server port (default: 9001)
 - **Host**: HTTP server host
 - **Versioning**: API versioning settings
 
 ### JWT Configuration
+
 - **Access Token**: Secret key and expiration time
 - **Refresh Token**: Secret key and expiration time
 
 ### Database Configuration
+
 - **URL**: PostgreSQL connection string
 - **Migrations**: Database migration settings
 
 ### Redis Configuration
+
 - **URL**: Redis connection string
 - **Key Prefix**: Cache key prefix
 - **TTL**: Cache time-to-live
 
 ### gRPC Configuration
+
 - **URL**: gRPC server address
 - **Package**: Protocol buffer package name
 
@@ -222,6 +240,7 @@ npm run test:cov
 ## 📚 API Documentation
 
 When running in development mode, Swagger documentation is available at:
+
 ```
 http://localhost:9001/docs
 ```
@@ -246,15 +265,19 @@ http://localhost:9001/docs
 ## 🚀 Deployment
 
 ### Environment Variables
+
 Ensure all required environment variables are set in your deployment environment.
 
 ### Database Migrations
+
 Run database migrations before starting the service:
+
 ```bash
 npm run prisma:migrate:prod
 ```
 
 ### Health Checks
+
 The service provides health check endpoints for load balancers and monitoring systems.
 
 ## 🤝 Contributing

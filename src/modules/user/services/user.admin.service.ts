@@ -22,17 +22,12 @@ export class UserAdminService {
     }
 
     async deleteUser(userId: string): Promise<void> {
-        const user = await this.databaseService.user.findUnique({
-            where: { id: userId, deletedAt: null },
-        });
+        const user = await this.databaseService.userRepository.findById(userId);
 
         if (!user) {
             throw new NotFoundException('User not found');
         }
 
-        await this.databaseService.user.update({
-            where: { id: userId },
-            data: { deletedAt: new Date() },
-        });
+        await this.databaseService.userRepository.softDelete(userId);
     }
 }

@@ -1,6 +1,6 @@
 import { SetMetadata, applyDecorators } from '@nestjs/common';
 import { ApiBearerAuth } from '@nestjs/swagger';
-import { Role } from '@prisma/client';
+import { Role } from '@backendworks/auth-db';
 import { ROLES_DECORATOR_KEY } from '../constants/request.constant';
 
 export const AllowedRoles = (roles: Role[]) => {
