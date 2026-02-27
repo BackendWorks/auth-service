@@ -1,0 +1,14 @@
+{
+  "success": {
+    "get": "User profile retrieved successfully.",
+    "update": "User profile updated successfully.",
+    "list": "Users retrieved successfully.",
+    "delete": "User deleted successfully."
+  },
+  "error": {
+    "userNotFound": "User not found.",
+    "updateFailed": "Failed to update user profile.",
+    "deleteFailed": "Failed to delete user.",
+    "invalidUserId": "Invalid user ID provided."
+  }
+}

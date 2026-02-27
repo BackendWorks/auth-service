@@ -1,0 +1,33 @@
+{
+  "testTimeout": 10000,
+  "rootDir": "../",
+  "modulePaths": ["."],
+  "testEnvironment": "node",
+  "testMatch": ["<rootDir>/test/unit/**/*.spec.ts"],
+  "collectCoverage": true,
+  "coverageDirectory": "coverage",
+  "collectCoverageFrom": [
+    "<rootDir>/src/**/*.service.ts"
+  ],
+  "coverageThreshold": {
+    "global": {
+      "branches": 100,
+      "functions": 100,
+      "lines": 100,
+      "statements": 100
+    }
+  },
+  "moduleFileExtensions": ["js", "ts", "json"],
+  "transform": {
+    "^.+\\.(t|j)s$": "ts-jest"
+  },
+  "modulePathIgnorePatterns": ["<rootDir>/dist"],
+
+  "coverageReporters": ["text", "lcov", "html"],
+  "coveragePathIgnorePatterns": [
+    "<rootDir>/src/generated/",
+    "<rootDir>/src/main.ts",
+    "<rootDir>/src/app/app.controller.ts",
+    "<rootDir>/src/swagger.ts"
+  ]
+}
