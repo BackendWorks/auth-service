@@ -1,103 +1,103 @@
 name: Deploy
 
 on:
-    push:
-        branches: [main]
-    workflow_dispatch:
-        inputs:
-            environment:
-                description: Target environment
-                required: true
-                default: production
-                type: choice
-                options: [production, staging]
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target environment
+        required: true
+        default: production
+        type: choice
+        options: [production, staging]
 
 env:
-    AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
-    ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY_AUTH_SERVICE || 'backendworks/auth-service' }}
-    ECS_CLUSTER: ${{ vars.ECS_CLUSTER || 'backendworks' }}
-    ECS_SERVICE: ${{ vars.ECS_SERVICE_AUTH || 'auth-service' }}
-    CONTAINER_NAME: bw-auth-service
+  AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
+  ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY_AUTH_SERVICE || 'backendworks/auth-service' }}
+  ECS_CLUSTER: ${{ vars.ECS_CLUSTER || 'backendworks' }}
+  ECS_SERVICE: ${{ vars.ECS_SERVICE_AUTH || 'auth-service' }}
+  CONTAINER_NAME: bw-auth-service
 
 jobs:
-    deploy:
-        name: Build & Deploy to AWS ECS
-        runs-on: ubuntu-latest
-        environment: ${{ github.event.inputs.environment || 'production' }}
+  deploy:
+    name: Build & Deploy to AWS ECS
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment || 'production' }}
 
-        permissions:
-            id-token: write # OIDC token for AWS auth
-            contents: read
+    permissions:
+      id-token: write # OIDC token for AWS auth
+      contents: read
 
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v4
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-            - name: Setup Node
-              uses: actions/setup-node@v4
-              with:
-                  node-version: 20
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
 
-            - name: Install dependencies
-              run: yarn install --frozen-lockfile
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
 
-            - name: Generate proto types
-              run: npm run proto:generate
+      - name: Generate proto types
+        run: npm run proto:generate
 
-            - name: Build application
-              run: npm run build
+      - name: Build application
+        run: npm run build
 
-            - name: Configure AWS credentials (OIDC)
-              uses: aws-actions/configure-aws-credentials@v4
-              with:
-                  role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
-                  aws-region: ${{ env.AWS_REGION }}
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
 
-            - name: Login to Amazon ECR
-              id: login-ecr
-              uses: aws-actions/amazon-ecr-login@v2
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
 
-            - name: Build, tag & push Docker image
-              id: build-image
-              env:
-                  ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-                  IMAGE_TAG: ${{ github.sha }}
-              run: |
-                  docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-                  docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
-                             $ECR_REGISTRY/$ECR_REPOSITORY:latest
-                  docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
-                  docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
-                  echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> "$GITHUB_OUTPUT"
+      - name: Build, tag & push Docker image
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG \
+                     $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> "$GITHUB_OUTPUT"
 
-            - name: Download current ECS task definition
-              run: |
-                  aws ecs describe-task-definition \
-                    --task-definition ${{ env.ECS_SERVICE }} \
-                    --query taskDefinition > task-definition.json
+      - name: Download current ECS task definition
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition ${{ env.ECS_SERVICE }} \
+            --query taskDefinition > task-definition.json
 
-            - name: Update task definition with new image
-              id: task-def
-              uses: aws-actions/amazon-ecs-render-task-definition@v1
-              with:
-                  task-definition: task-definition.json
-                  container-name: ${{ env.CONTAINER_NAME }}
-                  image: ${{ steps.build-image.outputs.image }}
+      - name: Update task definition with new image
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: ${{ env.CONTAINER_NAME }}
+          image: ${{ steps.build-image.outputs.image }}
 
-            - name: Deploy to ECS
-              uses: aws-actions/amazon-ecs-deploy-task-definition@v2
-              with:
-                  task-definition: ${{ steps.task-def.outputs.task-definition }}
-                  service: ${{ env.ECS_SERVICE }}
-                  cluster: ${{ env.ECS_CLUSTER }}
-                  wait-for-service-stability: true
+      - name: Deploy to ECS
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true
 
-            - name: Run DB migrations
-              run: |
-                  aws ecs run-task \
-                    --cluster ${{ env.ECS_CLUSTER }} \
-                    --task-definition ${{ env.ECS_SERVICE }}-migrate \
-                    --launch-type FARGATE \
-                    --network-configuration "awsvpcConfiguration={subnets=[${{ secrets.SUBNET_IDS }}],securityGroups=[${{ secrets.SECURITY_GROUP_IDS }}]}" \
-                    --overrides '{"containerOverrides":[{"name":"${{ env.CONTAINER_NAME }}","command":["npm","run","prisma:migrate:prod"]}]}'
-              continue-on-error: true
+      - name: Run DB migrations
+        run: |
+          aws ecs run-task \
+            --cluster ${{ env.ECS_CLUSTER }} \
+            --task-definition ${{ env.ECS_SERVICE }}-migrate \
+            --launch-type FARGATE \
+            --network-configuration "awsvpcConfiguration={subnets=[${{ secrets.SUBNET_IDS }}],securityGroups=[${{ secrets.SECURITY_GROUP_IDS }}]}" \
+            --overrides '{"containerOverrides":[{"name":"${{ env.CONTAINER_NAME }}","command":["npm","run","prisma:migrate:prod"]}]}'
+        continue-on-error: true
