@@ -1,8 +1,9 @@
 name: Deploy
 
 on:
-  push:
-    branches: [main]
+  # Deployment to AWS is disabled; re-enable by uncommenting the push trigger below
+  # push:
+  #   branches: [main]
   workflow_dispatch:
     inputs:
       environment:
