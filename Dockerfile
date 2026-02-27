@@ -6,11 +6,15 @@ FROM base AS deps
 RUN apk add --no-cache libc6-compat wget openssl
 WORKDIR /app
 
-# Copy package files
-COPY package.json yarn.lock* ./
+# Build-time token for GitHub Packages — never stored in the final image
+ARG NODE_AUTH_TOKEN
+ENV NODE_AUTH_TOKEN=${NODE_AUTH_TOKEN}
 
-# Install dependencies
-RUN yarn --frozen-lockfile --production=false
+# Copy package files
+COPY .npmrc package.json yarn.lock* ./
+
+# Install dependencies, then remove .npmrc so the token is not cached
+RUN yarn --frozen-lockfile --production=false && rm -f .npmrc
 
 # Build the source code
 FROM base AS builder
