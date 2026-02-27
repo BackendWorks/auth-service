@@ -4,31 +4,31 @@ A microservice for handling user authentication and authorization in the NestJS 
 
 ## 🚀 Features
 
-- **User Authentication**: JWT-based authentication with access and refresh tokens
-- **User Management**: CRUD operations for user accounts
-- **Role-based Authorization**: Support for ADMIN and USER roles
-- **gRPC Microservice**: Inter-service communication via gRPC
-- **REST API**: HTTP endpoints for authentication operations
-- **Database Integration**: PostgreSQL with Prisma ORM
-- **Caching**: Redis-based caching for performance
-- **Internationalization**: Multi-language support with nestjs-i18n
-- **API Documentation**: Swagger/OpenAPI documentation
-- **Health Checks**: Built-in health monitoring
-- **Security**: Helmet security headers, CORS configuration
+-   **User Authentication**: JWT-based authentication with access and refresh tokens
+-   **User Management**: CRUD operations for user accounts
+-   **Role-based Authorization**: Support for ADMIN and USER roles
+-   **gRPC Microservice**: Inter-service communication via gRPC
+-   **REST API**: HTTP endpoints for authentication operations
+-   **Database Integration**: PostgreSQL with Prisma ORM
+-   **Caching**: Redis-based caching for performance
+-   **Internationalization**: Multi-language support with nestjs-i18n
+-   **API Documentation**: Swagger/OpenAPI documentation
+-   **Health Checks**: Built-in health monitoring
+-   **Security**: Helmet security headers, CORS configuration
 
 ## 🏗️ Architecture
 
 ### Technology Stack
 
-- **Framework**: NestJS 10.x
-- **Language**: TypeScript 5.x
-- **Database**: PostgreSQL with Prisma ORM
-- **Cache**: Redis with cache-manager
-- **Authentication**: JWT with Passport.js
-- **API Documentation**: Swagger/OpenAPI
-- **Microservice**: gRPC communication
-- **Validation**: class-validator and class-transformer
-- **Testing**: Jest
+-   **Framework**: NestJS 10.x
+-   **Language**: TypeScript 5.x
+-   **Database**: PostgreSQL with Prisma ORM
+-   **Cache**: Redis with cache-manager
+-   **Authentication**: JWT with Passport.js
+-   **API Documentation**: Swagger/OpenAPI
+-   **Microservice**: gRPC communication
+-   **Validation**: class-validator and class-transformer
+-   **Testing**: Jest
 
 ### Service Structure
 
@@ -57,10 +57,10 @@ src/
 
 ## 📋 Prerequisites
 
-- Node.js >= 18.0.0
-- npm >= 9.0.0
-- PostgreSQL
-- Redis
+-   Node.js >= 18.0.0
+-   npm >= 9.0.0
+-   PostgreSQL
+-   Redis
 
 ## 🛠️ Installation
 
@@ -159,32 +159,32 @@ docker run -p 9001:9001 auth-service
 
 #### Public Endpoints
 
-- `POST /auth/login` - User login
-- `POST /auth/signup` - User registration
-- `GET /auth/refresh` - Refresh access token
+-   `POST /auth/login` - User login
+-   `POST /auth/signup` - User registration
+-   `GET /auth/refresh` - Refresh access token
 
 #### Protected Endpoints
 
-- `GET /user/profile` - Get user profile
-- `PUT /user/profile` - Update user profile
+-   `GET /user/profile` - Get user profile
+-   `PUT /user/profile` - Update user profile
 
 ### User Management Endpoints
 
 #### Admin Only
 
-- `GET /admin/user` - List all users (paginated)
-- `DELETE /admin/user/:id` - Delete user
+-   `GET /admin/user` - List all users (paginated)
+-   `DELETE /admin/user/:id` - Delete user
 
 ### Health Check
 
-- `GET /health` - Service health status
-- `GET /` - Service information
+-   `GET /health` - Service health status
+-   `GET /` - Service information
 
 ## 🔌 gRPC Services
 
 ### AuthService
 
-- `ValidateToken` - Validate JWT tokens and return user information
+-   `ValidateToken` - Validate JWT tokens and return user information
 
 ## 🔧 Configuration
 
@@ -192,49 +192,43 @@ The service uses a modular configuration system with environment-specific settin
 
 ### App Configuration
 
-- **Name**: Service name and display information
-- **Environment**: Development, staging, production
-- **Debug**: Debug mode settings
-- **CORS**: Cross-origin resource sharing settings
+-   **Name**: Service name and display information
+-   **Environment**: Development, staging, production
+-   **Debug**: Debug mode settings
+-   **CORS**: Cross-origin resource sharing settings
 
 ### HTTP Configuration
 
-- **Port**: HTTP server port (default: 9001)
-- **Host**: HTTP server host
-- **Versioning**: API versioning settings
+-   **Port**: HTTP server port (default: 9001)
+-   **Host**: HTTP server host
+-   **Versioning**: API versioning settings
 
 ### JWT Configuration
 
-- **Access Token**: Secret key and expiration time
-- **Refresh Token**: Secret key and expiration time
+-   **Access Token**: Secret key and expiration time
+-   **Refresh Token**: Secret key and expiration time
 
 ### Database Configuration
 
-- **URL**: PostgreSQL connection string
-- **Migrations**: Database migration settings
+-   **URL**: PostgreSQL connection string
+-   **Migrations**: Database migration settings
 
 ### Redis Configuration
 
-- **URL**: Redis connection string
-- **Key Prefix**: Cache key prefix
-- **TTL**: Cache time-to-live
+-   **URL**: Redis connection string
+-   **Key Prefix**: Cache key prefix
+-   **TTL**: Cache time-to-live
 
 ### gRPC Configuration
 
-- **URL**: gRPC server address
-- **Package**: Protocol buffer package name
+-   **URL**: gRPC server address
+-   **Package**: Protocol buffer package name
 
 ## 🧪 Testing
 
 ```bash
 # Run all tests
 npm test
-
-# Run tests in watch mode
-npm run test:watch
-
-# Run tests with coverage
-npm run test:cov
 ```
 
 ## 📚 API Documentation
@@ -247,20 +241,20 @@ http://localhost:9001/docs
 
 ## 🔒 Security Features
 
-- **JWT Authentication**: Secure token-based authentication
-- **Password Hashing**: bcrypt password hashing
-- **Role-based Access Control**: ADMIN and USER roles
-- **Helmet Security**: Security headers
-- **CORS Protection**: Cross-origin request protection
-- **Input Validation**: Request validation with class-validator
-- **Rate Limiting**: Built-in rate limiting (configurable)
+-   **JWT Authentication**: Secure token-based authentication
+-   **Password Hashing**: bcrypt password hashing
+-   **Role-based Access Control**: ADMIN and USER roles
+-   **Helmet Security**: Security headers
+-   **CORS Protection**: Cross-origin request protection
+-   **Input Validation**: Request validation with class-validator
+-   **Rate Limiting**: Built-in rate limiting (configurable)
 
 ## 📊 Monitoring
 
-- **Health Checks**: Built-in health monitoring endpoints
-- **Sentry Integration**: Error tracking and monitoring
-- **Logging**: Structured logging with Winston
-- **Metrics**: Performance metrics collection
+-   **Health Checks**: Built-in health monitoring endpoints
+-   **Sentry Integration**: Error tracking and monitoring
+-   **Logging**: Structured logging with Winston
+-   **Metrics**: Performance metrics collection
 
 ## 🚀 Deployment
 
