@@ -16,10 +16,6 @@
         "lint": "eslint \"{src,test}/**/*.ts\" --fix",
         "test": "jest --config test/jest.json --runInBand",
         "proto:generate": "npx nestjs-grpc generate --proto ./src/protos --output ./src/generated",
-        "prisma:generate": "prisma generate",
-        "prisma:migrate": "prisma migrate dev",
-        "prisma:migrate:prod": "prisma migrate deploy",
-        "prisma:studio": "prisma studio",
         "prepare": "husky"
     },
     "dependencies": {

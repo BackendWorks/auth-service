@@ -8,7 +8,6 @@ WORKDIR /app
 
 # Copy package files
 COPY package.json yarn.lock* ./
-COPY prisma ./prisma/
 
 # Install dependencies
 RUN yarn --frozen-lockfile --production=false
@@ -21,7 +20,6 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Generate Prisma client and build application
-RUN yarn prisma:generate
 RUN yarn proto:generate
 RUN yarn build
 
@@ -36,7 +34,6 @@ RUN adduser --system --uid 1001 nestjs
 
 # Copy necessary files from builder stage
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/src/protos ./src/protos
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/yarn.lock ./yarn.lock

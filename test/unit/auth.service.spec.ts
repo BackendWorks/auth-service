@@ -2,7 +2,7 @@ import { ConflictException, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
-import { Role } from '@prisma/client';
+import { Role } from '@backendworks/auth-db';
 
 import { HashService } from 'src/common/services/hash.service';
 import { AuthLoginDto } from 'src/modules/auth/dtos/auth.login.dto';
